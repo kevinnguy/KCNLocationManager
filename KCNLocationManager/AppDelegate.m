@@ -51,7 +51,7 @@
     return YES;
 }
 
--(void)postLocation {
+- (void)postLocation {
     [[KCNLocationManager sharedManager] uploadCurrentLocation:^(CLLocation *location) {
         NSDictionary *json = @{@"lat" : [NSString stringWithFormat:@"%f", location.coordinate.latitude],
                                @"long" : [NSString stringWithFormat:@"%f", location.coordinate.longitude]};

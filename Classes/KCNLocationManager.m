@@ -15,7 +15,7 @@
 
 @property (nonatomic, strong) CLLocationManager *locationManager;
 
-@property (nonatomic, copy) NSMutableArray *locationArray;
+@property (nonatomic, strong) NSMutableArray *locationArray;
 @property (nonatomic, copy) CLLocation *lastLocation;
 @property (nonatomic, copy) CLLocation *currentLocation;
 
