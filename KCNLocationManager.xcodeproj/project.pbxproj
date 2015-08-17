@@ -437,6 +437,7 @@
 				0A3695241B82802C004D46FD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		0A3695251B82802C004D46FD /* Build configuration list for PBXNativeTarget "KCNLocationManagerTests" */ = {
 			isa = XCConfigurationList;
@@ -445,6 +446,7 @@
 				0A3695271B82802C004D46FD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
