@@ -62,10 +62,12 @@ NSTimeInterval const kDefaultLocationManagerTimerInterval = 60.0f;
     
     self.backgroundTaskArray = [NSMutableArray new];
     self.masterTask = UIBackgroundTaskInvalid;
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidEnterBackground) name:UIApplicationDidEnterBackgroundNotification object:nil];
 
     return self;
+}
+
+- (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
 }
 
 #pragma mark - Post update to server
@@ -118,6 +120,10 @@ NSTimeInterval const kDefaultLocationManagerTimerInterval = 60.0f;
         [servicesDisabledAlert show];
         return;
     }
+    
+    // Remove UIApplicationDidEnterBackgroundNotification in case it was already added
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidEnterBackground) name:UIApplicationDidEnterBackgroundNotification object:nil];
     
     NSLog(@"KCNLocationManager: authorizationStatus authorized");
     [self updateLocation];
