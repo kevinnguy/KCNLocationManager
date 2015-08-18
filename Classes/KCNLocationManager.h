@@ -17,6 +17,8 @@
 @property (nonatomic) NSTimeInterval locationManagerTimerInterval;
 
 - (void)startLocationTracking;
+- (void)stopLocationTracking;
+
 - (void)uploadCurrentLocation:(void (^)(CLLocation *location))uploadBlock;
 
 @end
