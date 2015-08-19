@@ -105,8 +105,37 @@ NSTimeInterval const kDefaultLocationManagerTimerInterval = 60.0f;
     [self beginNewBackgroundTask];
 }
 
-#pragma mark - Location updated
+#pragma mark - Location 
+- (KCNLocationTrackingStatus)locationTrackingStatus {
+    if (![CLLocationManager locationServicesEnabled]) {
+        return KCNLocationTrackingStatusLocationServicesDenied;
+    }
+    
+    if ([CLLocationManager authorizationStatus] == kCLAuthorizationStatusDenied) {
+        return KCNLocationTrackingStatusLocationServicesDenied;
+    }
+    
+    if ([CLLocationManager authorizationStatus] == kCLAuthorizationStatusRestricted) {
+        return KCNLocationTrackingStatusLocationServicesRestricted;
+    }
+    
+    if ([UIApplication sharedApplication].backgroundRefreshStatus == UIBackgroundRefreshStatusDenied) {
+        return KCNLocationTrackingStatusBackgroundRefreshDenied;
+    }
+    
+    if ([UIApplication sharedApplication].backgroundRefreshStatus == UIBackgroundRefreshStatusRestricted) {
+        return KCNLocationTrackingStatusBackgroundRefreshRestricted;
+    }
+    
+    return KCNLocationTrackingStatusAllowed;
+}
+
 - (void)startLocationTracking {
+    if ([self locationTrackingStatus] != KCNLocationTrackingStatusAllowed) {
+        [self log:@"KCNLocationManager: Can't startLocationTracking. locationTrackingStatus is not allowed" arguments:nil];
+        return;
+    }
+    
     [self log:@"KCNLocationManager: startLocationTracking" arguments:nil];
     
     // Remove UIApplicationDidEnterBackgroundNotification in case it was already added
@@ -189,7 +218,6 @@ NSTimeInterval const kDefaultLocationManagerTimerInterval = 60.0f;
 }
 
 #pragma mark - CLLocationManagerDelegate Methods
-
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations{
     [self log:@"KCNLocationManager: locationManager didUpdateLocations" arguments:nil];
     

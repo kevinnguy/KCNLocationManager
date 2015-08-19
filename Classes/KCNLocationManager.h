@@ -12,11 +12,21 @@
 
 @interface KCNLocationManager : NSObject
 
-@property (nonatomic) NSTimeInterval locationManagerTimerInterval;
+typedef NS_ENUM(NSInteger, KCNLocationTrackingStatus) {
+    KCNLocationTrackingStatusLocationServicesDenied,
+    KCNLocationTrackingStatusLocationServicesRestricted,
+    KCNLocationTrackingStatusBackgroundRefreshDenied,
+    KCNLocationTrackingStatusBackgroundRefreshRestricted,
+    KCNLocationTrackingStatusAllowed
+};
 
+@property (nonatomic) NSTimeInterval locationManagerTimerInterval;
 @property (nonatomic) BOOL enableLogging;
 
 + (instancetype)sharedManager;
+
+// Check status before starting location tracking
+- (KCNLocationTrackingStatus)locationTrackingStatus;
 
 - (void)startLocationTracking;
 - (void)stopLocationTracking;
