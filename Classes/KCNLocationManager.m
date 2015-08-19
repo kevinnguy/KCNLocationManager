@@ -154,6 +154,7 @@ NSTimeInterval const kDefaultLocationManagerTimerInterval = 60.0f;
     }
     
     [self.locationManager stopUpdatingLocation];
+    [self.locationArray removeAllObjects];
 }
 
 - (void)restartLocationUpdates {
@@ -201,16 +202,11 @@ NSTimeInterval const kDefaultLocationManagerTimerInterval = 60.0f;
 }
 
 - (void)endBackgroundTasks {
-    UIApplication* application = [UIApplication sharedApplication];
-    if(![application respondsToSelector:@selector(endBackgroundTask:)]){
-        return;
-    }
-
     NSInteger count = self.backgroundTaskArray.count;
     for (NSInteger i = 1; i < count; i++) {
         [self log:@"KCNLocationManager: ending background task id:" arguments:@[self.backgroundTaskArray.firstObject]];
         UIBackgroundTaskIdentifier bgTaskId = [self.backgroundTaskArray.firstObject integerValue];
-        [application endBackgroundTask:bgTaskId];
+        [[UIApplication sharedApplication] endBackgroundTask:bgTaskId];
         [self.backgroundTaskArray removeObjectAtIndex:0];
     }
     
