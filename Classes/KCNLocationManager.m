@@ -20,7 +20,6 @@
 @property (nonatomic, copy) CLLocation *currentLocation;
 
 @property (nonatomic, strong) NSTimer *restartLocationUpdateTimer;
-//@property (nonatomic, strong) NSTimer *delayTimer;
 
 @property (nonatomic, strong) NSMutableArray *backgroundTaskArray;
 @property (nonatomic) UIBackgroundTaskIdentifier masterTask;
@@ -52,7 +51,8 @@ NSTimeInterval const kDefaultLocationManagerTimerInterval = 60.0f;
     }
     
     self.locationManagerTimerInterval = kDefaultLocationManagerTimerInterval;
-    
+    self.enableLogging = YES;
+
     self.locationManager = [CLLocationManager new];
     self.locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation;
     self.locationManager.distanceFilter = kCLDistanceFilterNone;
@@ -62,6 +62,7 @@ NSTimeInterval const kDefaultLocationManagerTimerInterval = 60.0f;
     
     self.backgroundTaskArray = [NSMutableArray new];
     self.masterTask = UIBackgroundTaskInvalid;
+    
 
     return self;
 }
@@ -83,17 +84,17 @@ NSTimeInterval const kDefaultLocationManagerTimerInterval = 60.0f;
     
     if (self.locationArray.count == 0) {
         // Sometimes due to network issue or unknown reason, you could not get the location during that period
-        // The best you can do is sending the last known location to the server
-//        NSLog(@"KCNLocationManager: KCNLocationManager: Unable to get location, use the last known location");
+        [self log:@"KCNLocationManager: KCNLocationManager: Unable to get location, use the last known location" arguments:nil];
         self.currentLocation = self.lastLocation;
     } else {
         self.currentLocation = bestLocation;
     }
     
     // Post location to server
-//    NSLog(@"KCNLocationManager: Best current location: %@", self.currentLocation.description);
-    uploadBlock(self.currentLocation);
-        
+    if (self.currentLocation) {
+        uploadBlock(self.currentLocation);
+    }
+    
     // Clear unused locations
     [self.locationArray removeAllObjects];
 }
@@ -106,31 +107,17 @@ NSTimeInterval const kDefaultLocationManagerTimerInterval = 60.0f;
 
 #pragma mark - Location updated
 - (void)startLocationTracking {
-//    UIAlertView *servicesDisabledAlert = [[UIAlertView alloc] initWithTitle:@"Location Services Disabled" message:@"You currently have all location services for this device disabled" delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
-//    
-//    if (![CLLocationManager locationServicesEnabled]) {
-//        NSLog(@"KCNLocationManager: locationServicesEnabled disabled");
-//        [servicesDisabledAlert show];
-//        return;
-//    }
-//    
-//    if([CLLocationManager authorizationStatus] == kCLAuthorizationStatusDenied ||
-//       [CLLocationManager authorizationStatus] == kCLAuthorizationStatusRestricted) {
-//        NSLog(@"KCNLocationManager: authorizationStatus failed");
-//        [servicesDisabledAlert show];
-//        return;
-//    }
+    [self log:@"KCNLocationManager: startLocationTracking" arguments:nil];
     
     // Remove UIApplicationDidEnterBackgroundNotification in case it was already added
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidEnterBackground) name:UIApplicationDidEnterBackgroundNotification object:nil];
     
-//    NSLog(@"KCNLocationManager: authorizationStatus authorized");
     [self updateLocation];
 }
 
 - (void)stopLocationTracking {
-    //    NSLog(@"KCNLocationManager: stopLocationTracking");
+    [self log:@"KCNLocationManager: stopLocationTracking" arguments:nil];
     
     if (self.restartLocationUpdateTimer) {
         [self.restartLocationUpdateTimer invalidate];
@@ -141,7 +128,7 @@ NSTimeInterval const kDefaultLocationManagerTimerInterval = 60.0f;
 }
 
 - (void)restartLocationUpdates {
-//    NSLog(@"KCNLocationManager: restartLocationUpdates");
+    [self log:@"KCNLocationManager: restartLocationUpdates" arguments:nil];
     
     if (self.restartLocationUpdateTimer) {
         [self.restartLocationUpdateTimer invalidate];
@@ -169,14 +156,14 @@ NSTimeInterval const kDefaultLocationManagerTimerInterval = 60.0f;
     }
     
     backgroundTask = [application beginBackgroundTaskWithExpirationHandler:^{
-//        NSLog(@"KCNLocationManager: background task %lu expired", (unsigned long)backgroundTask);
+        [self log:@"KCNLocationManager: expire background task id:" arguments:@[@(backgroundTask)]];
     }];
     
     if (self.masterTask == UIBackgroundTaskInvalid) {
         self.masterTask = backgroundTask;
-//        NSLog(@"KCNLocationManager: started master task %lu", (unsigned long)self.masterTask);
+        [self log:@"KCNLocationManager: started master task id:" arguments:@[@(backgroundTask)]];
     } else {
-//        NSLog(@"KCNLocationManager: started background task %lu", (unsigned long)backgroundTask);
+        [self log:@"KCNLocationManager: started background task id:" arguments:@[@(backgroundTask)]];
         [self.backgroundTaskArray addObject:@(backgroundTask)];
         [self endBackgroundTasks];
     }
@@ -192,19 +179,19 @@ NSTimeInterval const kDefaultLocationManagerTimerInterval = 60.0f;
 
     NSInteger count = self.backgroundTaskArray.count;
     for (NSInteger i = 1; i < count; i++) {
+        [self log:@"KCNLocationManager: ending background task id:" arguments:@[self.backgroundTaskArray.firstObject]];
         UIBackgroundTaskIdentifier bgTaskId = [self.backgroundTaskArray.firstObject integerValue];
-//        NSLog(@"KCNLocationManager: ending background task with id -%lu", (unsigned long)bgTaskId);
         [application endBackgroundTask:bgTaskId];
         [self.backgroundTaskArray removeObjectAtIndex:0];
     }
     
-//    NSLog(@"KCNLocationManager: kept background task id %@", self.backgroundTaskArray.firstObject);
+    [self log:@"KCNLocationManager: kept background task id:" arguments:@[self.backgroundTaskArray.firstObject]];
 }
 
 #pragma mark - CLLocationManagerDelegate Methods
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations{
-//    NSLog(@"KCNLocationManager: locationManager didUpdateLocations");
+    [self log:@"KCNLocationManager: locationManager didUpdateLocations" arguments:nil];
     
     for (CLLocation *location in locations) {
         NSTimeInterval locationAge = -[location.timestamp timeIntervalSinceNow];
@@ -224,58 +211,32 @@ NSTimeInterval const kDefaultLocationManagerTimerInterval = 60.0f;
         }
     }
     
-    // If the timer still valid, return it (Will not run the code below)
     if (self.restartLocationUpdateTimer) {
         return;
     }
     
     [self beginNewBackgroundTask];
     
-    // Restart the location maanger after 1 minute
+    // Restart the location manager 
     self.restartLocationUpdateTimer = [NSTimer scheduledTimerWithTimeInterval:self.locationManagerTimerInterval
                                                   target:self
                                                 selector:@selector(restartLocationUpdates)
                                                 userInfo:nil
                                                  repeats:NO];
-    
-    //Will only stop the locationManager after 10 seconds, so that we can get some accurate locations
-    //The location manager will only operate for 10 seconds to save battery
-//    if (self.delayTimer) {
-//        [self.delayTimer invalidate];
-//        self.delayTimer = nil;
-//    }
-//    
-//    self.delayTimer = [NSTimer scheduledTimerWithTimeInterval:10 target:self
-//                                                     selector:@selector(stopUpdatingLocationDelay)
-//                                                     userInfo:nil
-//                                                      repeats:NO];
 }
 
-// Stop the locationManager
-//- (void)stopUpdatingLocationDelay {
-//    [self.locationManager stopUpdatingLocation];
-//}
-
-//- (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error {
-//    NSLog(@"KCNLocationManager: locationManager error:%@", error.description);
-//    switch (error.code) {
-//        case kCLErrorNetwork: {
-//            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Network Error" message:@"Please check your network connection." delegate:nil cancelButtonTitle:@"Ok" otherButtonTitles:nil];
-//            [alert show];
-//            break;
-//        }
-//    
-//        case kCLErrorDenied:{
-//            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Enable Location Service" message:@"You have to enable the Location Service to use this App. To enable, please go to Settings->Privacy->Location Services" delegate:nil cancelButtonTitle:@"Ok" otherButtonTitles:nil];
-//            [alert show];
-//            break;
-//        }
-//            
-//        default: {
-//            break;
-//        }
-//    }
-//}
+#pragma mark - Logging
+- (void)log:(NSString *)logString arguments:(NSArray *)arguments {
+    if (!self.enableLogging) {
+        return;
+    }
+    
+    for (NSObject *arg in arguments) {
+        logString = [logString stringByAppendingString:[NSString stringWithFormat:@" %@", arg.description]];
+    }
+    
+    NSLog(@"%@", logString);
+}
 
 
 @end

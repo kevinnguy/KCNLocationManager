@@ -12,9 +12,11 @@
 
 @interface KCNLocationManager : NSObject
 
-+ (instancetype)sharedManager;
-
 @property (nonatomic) NSTimeInterval locationManagerTimerInterval;
+
+@property (nonatomic) BOOL enableLogging;
+
++ (instancetype)sharedManager;
 
 - (void)startLocationTracking;
 - (void)stopLocationTracking;
