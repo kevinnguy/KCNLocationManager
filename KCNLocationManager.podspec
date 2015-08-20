@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = "KCNLocationManager"
-  s.version          = "1.0.0"
+  s.version          = "1.0.1"
   s.summary          = "Location manager"
   s.homepage         = "https://github.com/kevinnguy/KCNLocationManager"
   s.license          = 'MIT'
