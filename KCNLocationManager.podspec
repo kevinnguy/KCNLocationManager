@@ -4,8 +4,8 @@ Pod::Spec.new do |s|
   s.summary          = "Location manager"
   s.homepage         = "https://github.com/kevinnguy/KCNLocationManager"
   s.license          = 'MIT'
-  s.author           = 'Kevin Nguy'
-  s.source           = { :git => "https://github.com/kevinnguy/KCNLocationManager.git", :tag => :master }
+  s.authors          = { 'Kevin Nguy' => 'kevnguy@gmail.com' }
+  s.source           = { :git => "https://github.com/kevinnguy/KCNLocationManager.git", :tag => s.version.to_s }
   s.social_media_url = 'https://twitter.com/kevnguy'
 
   s.platform     = :ios
